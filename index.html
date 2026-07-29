@@ -43,15 +43,24 @@
 
     <link
       rel="preload"
+      href="./sigi-lite.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
       href="https://cdn.jsdelivr.net/gh/ziv50109/daoist-sigi@229982b39aa0c275505efa6bb65ed1b34bffcd6a/sigi.woff2"
       as="font"
       type="font/woff2"
       crossorigin
     />
     <style>
+      /* 513 字精簡字集。首屏靠它把畫面排出來，完整字集在背景載完才換上，
+         所以這裡不能接 sigi.woff2 —— 那會讓首屏等 990 KB */
       @font-face {
         font-family: "DaoistSigi";
-        src: url("./sigi.woff2") format("woff2");
+        src: url("./sigi-lite.woff2") format("woff2");
         font-display: block;
       }
       :root {
@@ -705,7 +714,7 @@
         </p>
         <div class="notice">
           常用字、辦公室怨念用語、法印用字、數字標點都在。字體檔約 1
-          MB，載入前先用內嵌的精簡字集頂著；超出字集的字會標成缺字並退回系統字體。
+          MB，載入前先用 513 字精簡字集頂著；超出字集的字會標成缺字並退回系統字體。
         </div>
       </header>
 
@@ -885,10 +894,14 @@
    immutable 的一年快取。換字體檔版本時連這個 URL 一起換。
 
    來源必須回 CORS 標頭，FontFace 一律以 anonymous 模式取檔。
-   檔案內嵌的 513 字精簡字集是後備，下載失敗時頂著用。
+
+   依序試到成功為止。完整字集是不缺字的唯一防線，不能只掛在第三方 CDN 上，
+   所以第二順位是同源那份；兩個都失敗才會停在 513 字的精簡字集。
    ══════════════════════════════════════════════════════════ */
-      const FONT_URL =
-        "https://cdn.jsdelivr.net/gh/ziv50109/daoist-sigi@229982b39aa0c275505efa6bb65ed1b34bffcd6a/sigi.woff2";
+      const FULL_SOURCES = [
+        "https://cdn.jsdelivr.net/gh/ziv50109/daoist-sigi@229982b39aa0c275505efa6bb65ed1b34bffcd6a/sigi.woff2",
+        "./sigi.woff2",
+      ];
 
       const SIGIL = '"DaoistSigiFull","DaoistSigi"';
       const FB =
@@ -965,19 +978,20 @@
       })();
 
       async function loadFull() {
-        if (!FONT_URL) return false;
-        try {
-          const ff = new FontFace(
-            "DaoistSigiFull",
-            `url(${FONT_URL}) format("woff2")`,
-          );
-          await ff.load();
-          document.fonts.add(ff);
-          return true;
-        } catch (err) {
-          console.warn("完整字體載入失敗，改用內嵌字集：", err);
-          return false;
+        for (const url of FULL_SOURCES) {
+          try {
+            const ff = new FontFace(
+              "DaoistSigiFull",
+              `url(${url}) format("woff2")`,
+            );
+            await ff.load();
+            document.fonts.add(ff);
+            return true;
+          } catch (err) {
+            console.warn("完整字體載入失敗：" + url, err);
+          }
         }
+        return false;
       }
 
       /* 覆蓋偵測：同一個字用「符體＋備援」和「純備援」各畫一次比像素 */
@@ -1311,7 +1325,7 @@
         if (e.key === "Escape") closeOut();
       });
 
-      /* 先用內嵌的精簡字集把畫面排出來，不等那 990 KB。完整字集在背景載完
+      /* 先用精簡字集把畫面排出來，不等那 990 KB。完整字集在背景載完
    才換上並重算覆蓋範圍 —— 反過來排的話，首屏會卡在字體下載上。 */
       (async () => {
         await document.fonts.ready;
