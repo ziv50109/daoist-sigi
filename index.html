@@ -23,7 +23,8 @@
 <meta name="twitter:description" content="符籙風格中文字體展示。輸入文字排成符紙，可存成 PNG。">
 <meta name="twitter:image" content="https://ziv50109.github.io/daoist-sigi/og.png">
 
-<link rel="preload" href="./sigi.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/gh/ziv50109/daoist-sigi@229982b39aa0c275505efa6bb65ed1b34bffcd6a/sigi.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 @font-face{
   font-family:"DaoistSigi";
@@ -368,13 +369,14 @@ footer a{color:var(--gold)}
 
 <script>
 /* ══════════════════════════════════════════════════════════
-   FONT_URL 指向同目錄的 sigi.woff2（完整 8,231 字）。檔案內嵌的
-   513 字精簡字集是後備：字體檔還沒下載完、或載入失敗時頂著用。
+   完整 8,231 字從 jsDelivr 取。網址釘的是 sigi.woff2 所在的 commit
+   而不是 @main：@main 的邊緣快取只有 12 小時，釘 commit 才拿得到
+   immutable 的一年快取。換字體檔版本時連這個 URL 一起換。
 
-   換到 CDN 或其他網域時，該來源必須回 CORS 標頭，FontFace 一律
-   以 anonymous 模式取檔。
+   來源必須回 CORS 標頭，FontFace 一律以 anonymous 模式取檔。
+   檔案內嵌的 513 字精簡字集是後備，下載失敗時頂著用。
    ══════════════════════════════════════════════════════════ */
-const FONT_URL = "./sigi.woff2";
+const FONT_URL = "https://cdn.jsdelivr.net/gh/ziv50109/daoist-sigi@229982b39aa0c275505efa6bb65ed1b34bffcd6a/sigi.woff2";
 
 const SIGIL = '"DaoistSigiFull","DaoistSigi"';
 const FB = '"PingFang TC","Noto Sans TC","Microsoft JhengHei","Hiragino Sans",sans-serif';
@@ -690,13 +692,18 @@ el('outclose').onclick = closeOut;
 out.onclick = e => { if(e.target===out) closeOut(); };
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeOut(); });
 
+/* 先用內嵌的精簡字集把畫面排出來，不等那 990 KB。完整字集在背景載完
+   才換上並重算覆蓋範圍 —— 反過來排的話，首屏會卡在字體下載上。 */
 (async ()=>{
   await document.fonts.ready;
-  const full = await loadFull();
-  if(full) document.body.classList.add('font-full');
   document.body.classList.add('font-settled');
-  covCache.clear();
   render();
+
+  if(await loadFull()){
+    document.body.classList.add('font-full');
+    covCache.clear();
+    render();
+  }
 })();
 </script>
 </body>

@@ -22,6 +22,8 @@ python3 -m http.server 8000
 # → http://127.0.0.1:8000/
 ```
 
+完整字集從 jsDelivr 取，網址釘在 `sigi.woff2` 所在的 commit（`@main` 的邊緣快取有 12 小時，釘 commit 才拿得到 immutable 的一年快取）。所以預覽要連網，離線時頁面會退回內嵌的精簡字集。
+
 ## 授權
 
 字體 **道源符體（Daoist Sigi Source）** 版權為 © 2024 Lochen Sans / [Losketch](https://github.com/Losketch/daoist-sigi-source) 所有，採 SIL Open Font License 1.1 授權，全文見 `OFL.txt`。本 repo 收錄的版本為 release V1.000。
