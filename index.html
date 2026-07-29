@@ -897,11 +897,14 @@
 
    依序試到成功為止。完整字集是不缺字的唯一防線，不能只掛在第三方 CDN 上，
    所以第二順位是同源那份；兩個都失敗才會停在 513 字的精簡字集。
+
+   第一順位的網址讀 head 那個 preload，不在 HTML 與 JS 各寫一份。拿掉 preload
+   就只從同源載入，仍然是完整字集。
    ══════════════════════════════════════════════════════════ */
       const FULL_SOURCES = [
-        "https://cdn.jsdelivr.net/gh/ziv50109/daoist-sigi@229982b39aa0c275505efa6bb65ed1b34bffcd6a/sigi.woff2",
+        document.querySelector('link[rel=preload][href*="sigi.woff2"]')?.href,
         "./sigi.woff2",
-      ];
+      ].filter(Boolean);
 
       const SIGIL = '"DaoistSigiFull","DaoistSigi"';
       const FB =
