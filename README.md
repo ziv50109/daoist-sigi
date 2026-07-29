@@ -22,7 +22,7 @@ python3 -m http.server 8000
 # → http://127.0.0.1:8000/
 ```
 
-完整字集從 jsDelivr 取，網址釘在 `sigi.woff2` 所在的 commit（`@main` 的邊緣快取有 12 小時，釘 commit 才拿得到 immutable 的一年快取）。所以預覽要連網，離線時頁面會退回同目錄的 `sigi-lite.woff2`（513 字精簡字集）。
+字體全部走同目錄，沒有外部依賴：`sigi-lite.woff2`（513 字）負責首屏，`sigi.woff2`（完整 8,231 字）在背景載完才換上。
 
 ## 授權
 
