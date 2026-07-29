@@ -4,7 +4,7 @@
 
 **線上版：https://ziv50109.github.io/daoist-sigi/**
 
-字體又稱雨君鬼臣體，思源黑體的衍生字體，把道教符籙的筆畫元素接在漢字字形上。
+字體又稱雨君鬼臣體，思源黑體的衍生字體，把道教符籙的筆畫元素接在漢字字形上。字體由 [Losketch](https://github.com/Losketch/daoist-sigi-source) 製作，本 repo 只是它的展示頁。
 
 ## 功能
 
@@ -23,6 +23,8 @@
 |---|---|
 | `index.html` | 單檔頁面，樣式與邏輯全部內嵌，另含 513 字精簡字集（base64） |
 | `sigi.woff2` | 完整 8,231 字字集 |
+| `og.png` | 社群分享預覽圖，1200×630 |
+| `OFL.txt` | 字體授權全文 |
 | `.nojekyll` | 停用 GitHub Pages 的 Jekyll 處理 |
 
 ## 字體載入
@@ -45,6 +47,6 @@ python3 -m http.server 8000
 
 ## 授權
 
-字體衍生自思源黑體（Source Han Sans），原字體採 SIL Open Font License 1.1。依 OFL 條款，衍生字體散布時須同樣以 OFL 1.1 釋出並附授權全文。
+字體 **道源符體（Daoist Sigi Source）** 版權為 © 2024 Lochen Sans / [Losketch](https://github.com/Losketch/daoist-sigi-source) 所有，採 SIL Open Font License 1.1 授權，全文見 `OFL.txt`。本 repo 收錄的版本為 release V1.000。
 
-授權全文（`OFL.txt`）與字體作者的版權聲明待補。
+保留字體名稱（Reserved Font Names）為 “Daoist Sigi Source”、“道源符体”、“雨君鬼臣体”。本 repo 未改動字體輪廓，`sigi.woff2` 與頁面內嵌的精簡字集都直接來自原字體，因此沿用原名。若你要改造字體再散布，依 OFL 條款必須改用其他名稱，並同樣以 OFL 1.1 釋出。
