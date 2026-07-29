@@ -162,7 +162,9 @@ input[type=range]{flex:1;accent-color:var(--cinnabar);background:transparent}
     repeating-linear-gradient(90deg,rgba(120,86,30,.024) 0 1px,transparent 1px 4px);
   padding:34px 28px;
   box-shadow:0 22px 54px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.25);
-  max-width:100%;
+  /* 不夾在容器寬度內：行長由使用者決定，超出的部分交給 .stage 捲動，
+     匯出量的是符紙整塊 rect，夾住的話會被裁掉 */
+  max-width:none;
 }
 .paper.plain{
   --sheet:#f4f1e8;
@@ -198,14 +200,16 @@ input[type=range]{flex:1;accent-color:var(--cinnabar);background:transparent}
   color:var(--cinnabar);white-space:pre-wrap;word-break:break-word;
   position:relative;z-index:1;
 }
-.text.vert{writing-mode:vertical-rl;text-orientation:upright;max-height:56vh}
+.text.vert{writing-mode:vertical-rl;text-orientation:upright}
 
 /* ---------- 法印。白文印：字為紙色，底為朱 ---------- */
 .seal{
   position:absolute;z-index:2;
   right:12px;bottom:12px;
   writing-mode:vertical-rl;text-orientation:upright;
-  font-family:"DaoistSigiFull","DaoistSigi",serif;
+  /* 印面不用符體：印格只有 3em 見方，雨鬼頭在這個尺寸會糊成一團 */
+  font-family:var(--fb);
+  font-weight:600;
   font-size:var(--seal-fs,22px);
   line-height:1.06;letter-spacing:0;
   color:var(--sheet);
@@ -219,6 +223,22 @@ input[type=range]{flex:1;accent-color:var(--cinnabar);background:transparent}
 .seal[hidden]{display:none}
 /* 有印時把右下留出來，印才不會壓在字上 */
 body.has-seal .paper{padding-bottom:calc(34px + var(--seal-box,60px))}
+
+/* 不換行時符紙跟著內容長大，溢出交給 .stage 捲動，匯出才不會被裁掉 */
+body.no-wrap .paper{max-width:none}
+
+/* 空符紙的提示。字級固定，不跟著滑桿放大 */
+.ghost{
+  position:absolute;inset:0;display:none;
+  align-items:center;justify-content:center;
+  font-family:var(--fb);font-size:13px;letter-spacing:.04em;white-space:nowrap;
+  color:rgba(35,30,24,.4);
+  pointer-events:none;user-select:none;z-index:1;
+}
+.paper.dark .ghost{color:rgba(217,208,192,.4)}
+body.is-empty .ghost{display:flex}
+/* 沒有字時符紙寬高會塌掉，給一張空紙該有的尺寸 */
+body.is-empty .paper{min-width:212px;min-height:302px}
 
 .hint{margin:12px 0 0;font-size:12px;color:var(--mute)}
 .hint .miss{color:var(--cinnabar);font-weight:600}
@@ -254,8 +274,8 @@ footer a{color:var(--gold)}
 <header>
   <p class="eyebrow">Daoist Sigi Source · V1.000</p>
   <h1 class="sigi">道源符體</h1>
-  <p class="sub">又稱雨君鬼臣體，思源黑體的衍生字體，把道教符籙的筆畫元素接在漢字字形上。拿來寫怨念，比 Helvetica 有效。<b>完整 8,231 字字集</b></p>
-  <div class="notice"><b>完整 8,231 字字集</b>，常用字、辦公室怨念用語、法印用字、數字標點都在。字體檔約 1 MB，載入前先用內嵌的 513 字精簡字集頂著；仍超出字集的字會標成缺字並退回系統字體。</div>
+  <p class="sub">又稱雨君鬼臣體，思源黑體的衍生字體，把道教符籙的筆畫元素接在漢字字形上，拿來寫怨念剛好。</p>
+  <div class="notice">常用字、辦公室怨念用語、法印用字、數字標點都在。字體檔約 1 MB，載入前先用內嵌的精簡字集頂著；超出字集的字會標成缺字並退回系統字體。</div>
 </header>
 
 <div class="main">
@@ -276,6 +296,7 @@ footer a{color:var(--gold)}
       <div class="row"><span class="name">字級</span><input type="range" id="size" min="20" max="150" value="68" aria-label="字級"><span class="val" id="sizeV">68</span></div>
       <div class="row"><span class="name">行距</span><input type="range" id="lh" min="100" max="220" value="130" aria-label="行距"><span class="val" id="lhV">1.30</span></div>
       <div class="row"><span class="name">字距</span><input type="range" id="ls" min="-10" max="40" value="4" aria-label="字距"><span class="val" id="lsV">.04</span></div>
+      <div class="row"><span class="name">行長</span><input type="range" id="wrap" min="2" max="25" value="10" aria-label="每行幾字換行，拉到底不換行"><span class="val" id="wrapV">10 字</span></div>
     </div>
 
     <div class="panel">
@@ -313,7 +334,8 @@ footer a{color:var(--gold)}
     <div class="stage">
       <div class="paper" id="sheet">
         <div class="text vert sigi" id="text"></div>
-        <div class="seal sigi" id="seal" aria-label="法印">敕令</div>
+        <div class="ghost" id="ghost">在左側書字</div>
+        <div class="seal" id="seal" aria-label="法印">敕令</div>
       </div>
     </div>
     <p class="hint" id="hint"></p>
@@ -323,14 +345,13 @@ footer a{color:var(--gold)}
 <section class="glyphs">
   <div class="gtitle">
     <h2>逐字對照</h2>
-    <p>上為符體，下為系統字體與碼位</p>
   </div>
   <div class="grid" id="grid"></div>
 </section>
 
 <footer>
   字體：Losketch／道源符體 V1.000，SIL Open Font License。
-  原始檔：<a href="https://github.com/Losketch/daoist-sigi-source/releases" target="_blank" rel="noopener">GitHub Releases</a>（倉庫已封存，不再更新）
+  原始檔：<a href="https://github.com/Losketch/daoist-sigi-source/releases" target="_blank" rel="noopener">GitHub Releases</a>
 </footer>
 </div>
 
@@ -371,7 +392,10 @@ const el = id => document.getElementById(id);
 const ta=el('ta'), textEl=el('text'), paperEl=el('sheet'), sealEl=el('seal'),
       hintEl=el('hint'), gridEl=el('grid');
 
-const state = {mode:'vert', size:68, lh:1.30, ls:0.04, ink:'#bf2a1c', paper:'sigil', seal:'敕令'};
+const state = {mode:'vert', size:68, lh:1.30, ls:0.04, wrap:10, ink:'#bf2a1c', paper:'sigil', seal:'敕令'};
+
+/* 行長滑桿拉到底就是不換行 */
+const NOWRAP = 25;
 
 /* 雲紋先載成 Image，匯出時才畫得出同一層紋 */
 let cloudImg = null;
@@ -447,24 +471,67 @@ el('inks').querySelectorAll('.sw').forEach(b=>{
 el('size').oninput = e => { state.size=+e.target.value; el('sizeV').textContent=state.size; render(); };
 el('lh').oninput   = e => { state.lh=+e.target.value/100; el('lhV').textContent=state.lh.toFixed(2); render(); };
 el('ls').oninput   = e => { state.ls=+e.target.value/100; el('lsV').textContent=state.ls.toFixed(2); render(); };
+el('wrap').oninput = e => {
+  state.wrap=+e.target.value;
+  el('wrapV').textContent = state.wrap>=NOWRAP ? '不換行' : state.wrap+' 字';
+  render();
+};
 ta.oninput = render;
 
 function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
 
+/* 一個字在排版方向上實際佔的長度（含字距）。量之前 maxWidth/maxHeight 必須是放開的 */
+function charStep(){
+  const n = textEl.firstChild;
+  if(!n || !n.nodeValue) return 0;
+  const r = document.createRange();
+  r.setStart(n, 0); r.setEnd(n, 1);
+  const rc = r.getBoundingClientRect();
+  return state.mode==='vert' ? rc.height : rc.width;
+}
+
 function render(){
   const raw = ta.value;
-  textEl.textContent = raw.length ? raw : "空白的符紙。左邊書幾個字，怨念自己會顯形。";
+  const empty = !raw.length;
+  document.body.classList.toggle('is-empty', empty);
+
+  textEl.textContent = raw;
   textEl.className = 'text sigi' + (state.mode==='vert' ? ' vert' : '');
   textEl.style.fontSize = state.size+'px';
   textEl.style.lineHeight = state.lh;
   textEl.style.letterSpacing = state.ls+'em';
   textEl.style.color = state.ink;
-  textEl.style.maxWidth = state.mode==='horiz' ? '10em' : '';
+
+  /* 行長。三件事要注意：
+     一、直排的字身推進不是 1em（符體的 vertical advance 比字面大得多），所以量畫面上
+     第一個字實際佔多少再乘字數。
+     二、排版方向的尺寸得自己給，block 元素預設撐滿容器可用空間，max-width／max-height
+     永遠輪不到生效。
+     三、給的是固定長度而不是 max-content 配上限，後者在直排會讓 Chrome 把餘數擠到第一列
+     （10 字排成 4／10／10）。 */
+  const noWrap = state.wrap >= NOWRAP;
+  const axis = state.mode==='horiz' ? 'width' : 'height';
+  document.body.classList.toggle('no-wrap', noWrap);
+  textEl.style.whiteSpace = noWrap ? 'pre' : 'pre-wrap';
+  textEl.style.width = textEl.style.height = '';
+  textEl.style.maxWidth = '';
+  textEl.style.maxHeight = 'none';
+  if(!empty){
+    if(noWrap){
+      textEl.style[axis] = 'max-content';
+    }else{
+      /* 內容不到設定行長時就照內容縮，不然符紙會拖出一截空白 */
+      const longest = Math.max(...raw.split('\n').map(s => Array.from(s).length));
+      const cells = Math.min(longest, state.wrap);
+      const step = charStep() || (1+state.ls)*state.size;
+      textEl.style[axis] = Math.ceil(cells*step) + 1 + 'px';
+    }
+  }
 
   paperEl.className = 'paper' + (state.paper==='plain' ? ' plain' : state.paper==='dark' ? ' dark' : '');
 
-  /* 法印隨字級縮放，但不跟著誇張放大 */
-  const on = state.seal !== 'none';
+  /* 法印隨字級縮放，但不跟著誇張放大。空符紙不蓋印 */
+  const on = state.seal !== 'none' && !empty;
   document.body.classList.toggle('has-seal', on);
   sealEl.hidden = !on;
   if(on){
@@ -479,9 +546,10 @@ function render(){
 
   const chars = Array.from(new Set(raw.replace(/\s/g,'')));
   const missing = chars.filter(c=>!covered(c));
-  hintEl.innerHTML = missing.length
-    ? `這些字沒有符體字形，顯示的是系統字體：<span class="miss">${esc(missing.join(' '))}</span>`
-    : `${chars.length} 個不重複字，全部有符體字形。`;
+  hintEl.innerHTML = empty ? ''
+    : missing.length
+      ? `這些字沒有符體字形，顯示的是系統字體：<span class="miss">${esc(missing.join(' '))}</span>`
+      : `${chars.length} 個不重複字，全部有符體字形。`;
 
   gridEl.innerHTML='';
   chars.slice(0,120).forEach(c=>{
@@ -545,7 +613,8 @@ function paintChars(g, root, pr){
     const size = parseFloat(cs.fontSize) || 16;
     const ls = parseFloat(cs.letterSpacing) || 0;
     const vert = cs.writingMode.indexOf('vertical') === 0;
-    g.font = `${size}px ${SIGIL},${FB}`;
+    /* 照元素實際的 font-family 與字重畫，法印不用符體時匯出才跟畫面對得上 */
+    g.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
     g.fillStyle = cs.color;
     const fm = g.measureText('字');
     const asc  = fm.fontBoundingBoxAscent  || size*0.88;
