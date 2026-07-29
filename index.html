@@ -140,6 +140,9 @@
       }
       h1 {
         font-family: "DaoistSigiFull", "DaoistSigi", var(--fb);
+        /* 字體只有 Regular。h1 預設 bold 會讓瀏覽器合成粗體，把雨鬼頭那些
+           密集細筆畫描成一團 */
+        font-weight: 400;
         font-size: clamp(48px, 10vw, 104px);
         line-height: 1;
         margin: 0;
